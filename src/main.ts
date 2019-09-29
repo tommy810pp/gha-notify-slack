@@ -217,45 +217,45 @@ class DefaultFieldsBuilder implements FieldsBuilder {
 }
 
 class KarateResultFiledsBuilder implements FieldsBuilder {
-  results: any;
   constructor() {
-    this.results = JSON.parse(readFileSync(core.getInput('karate_results_file'), {encoding: "utf-8"}));
   }
 
   build(github, job, steps): any {
     let failures: string[] = [];
-    this.results.failures.forEach((k: string, v: string) => {
+    const results = JSON.parse(readFileSync("./" + core.getInput('karate_results_file'), {encoding: "utf-8"}));
+    console.log(results);
+    results.failures.forEach((k: string, v: string) => {
       failures.push(`[${k}] ${v}`);
     });
     return [
       {
         "title": "features",
-        "text": this.results.features,
+        "text": results.features,
         "short": true
       },
       {
         "title": "scenarios",
-        "text": this.results.scenarios,
+        "text": results.scenarios,
         "short": true
       },
       {
         "title": "passed",
-        "text": this.results.passed,
+        "text": results.passed,
         "short": true
       },
       {
         "title": "failed",
-        "text": this.results.failed,
+        "text": results.failed,
         "short": true
       },
       {
         "title": "elapsedTime",
-        "text": this.results.elapsedTime,
+        "text": results.elapsedTime,
         "short": true
       },
       {
         "title": "totalTime",
-        "text": this.results.totalTime,
+        "text": results.totalTime,
         "short": true
       },
       {
