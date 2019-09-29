@@ -170,11 +170,12 @@ class PullRequestRequestedMessageBuilder extends MessageBuilder {
     const owner = this.github.event.repository.owner.login;
     const pull_number = this.github.event.check_suite.pull_requests[0].number;
     const repo = this.github.event.repository.name;
-    this.pull_request = await this.gh_client.pulls.get({
+    const response = await this.gh_client.pulls.get({
       owner,
       pull_number,
       repo 
     });
+    this.pull_request = response.data;
     console.log(this.pull_request);
     return super.build()
   }
