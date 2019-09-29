@@ -175,6 +175,7 @@ class PullRequestRequestedMessageBuilder extends MessageBuilder {
       pull_number,
       repo 
     });
+    console.log(this.pull_request);
     return super.build()
   }
 
