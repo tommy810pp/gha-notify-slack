@@ -26,8 +26,11 @@ inputs:
   footer_icon:
     description: 'notification footer icon'
     required: false
-  field_generator:
-    description: 'fields generator'
+  fields_builder:
+    description: 'fields builder'
+    required: false
+  karate_results_file:
+    description: 'karate results file path if fields_builder is karate'
     required: false
 runs:
   using: 'node12'
