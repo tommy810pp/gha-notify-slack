@@ -15,7 +15,7 @@ async function run() {
     builder.fieldsBuilder = fieldsBuilderFactory(core.getInput('fields_builder'));
     if (builder !== undefined) {
       const message = await builder.build();
-      console.log(message);
+      console.log(JSON.stringify(message));
       const webhook = new IncomingWebhook(core.getInput('webhook_url'));
       await webhook.send(message);
     }
@@ -229,37 +229,37 @@ class KarateResultFiledsBuilder implements FieldsBuilder {
     return [
       {
         "title": "features",
-        "text": results.features,
+        "value": results.features,
         "short": true
       },
       {
         "title": "scenarios",
-        "text": results.scenarios,
+        "value": results.scenarios,
         "short": true
       },
       {
         "title": "passed",
-        "text": results.passed,
+        "value": results.passed,
         "short": true
       },
       {
         "title": "failed",
-        "text": results.failed,
+        "value": results.failed,
         "short": true
       },
       {
         "title": "elapsedTime",
-        "text": results.elapsedTime,
+        "value": results.elapsedTime,
         "short": true
       },
       {
         "title": "totalTime",
-        "text": results.totalTime,
+        "value": results.totalTime,
         "short": true
       },
       {
         "title": "failures",
-        "text": failures.join('\n'),
+        "value": failures.join('\n'),
         "short": false
       }
     ]
