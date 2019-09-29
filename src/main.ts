@@ -8,7 +8,13 @@ async function run() {
     console.log(core.getInput('github'));
     console.log(core.getInput('job'));
     console.log(core.getInput('steps'));
-    console.log(buildMessage(github, job, steps))
+    
+    const builder = factory(github, job, steps)
+    if (builder !== undefined) {
+      const message = builder.build();
+      console.log(message);
+    }
+    // console.log(buildMessage(github, job, steps))
     // const webhook_url = core.getInput('webhook_url');
     // const webhook = new IncomingWebhook(webhook_url);
     // await webhook.send(buildMessage(github, job))
@@ -17,80 +23,129 @@ async function run() {
   }
 }
 
-function buildMessage(github: any, job: any, steps: any): any {
-  return {
-    attachments: [
+function factory(github, job, steps) {
+  switch(github.event_name) {
+    case 'pull_request':
+      return new PullRequestMessageBuilder(github, job, steps);
+    case 'push':
+      return new PushMessageBuilder(github, job, steps);
+  }
+}
+
+class MessageBuilder {
+  github: any;
+  job: any;
+  steps: any;
+  constructor(github, job, steps) {
+    this.github = github;
+    this.job = job;
+    this.steps = steps;
+  }
+  
+  build(): any {
+    return {
+      attachments: [
+        {
+          pretext: this.pretext(),
+          color: this.color(),
+          author_name: this.authorName(),
+          title: this.title(),
+          title_link: this.titleLink(),
+          text: this.text(),
+          fields: this.fields(),
+          footer: this.footer(),
+          footer_icon: this.footerIcon(),
+          ts: Date.now()
+        }
+      ]
+    }
+  }
+
+  authorName(): String {
+    return "";
+  }
+
+  pretext(): String {
+    return core.getInput("message");
+  }
+
+  text(): String {
+    return "";
+  }
+
+  color(): String {
+    switch(this.job.status) {
+      case 'Failure':
+        return 'danger';
+      case 'Success':
+        return 'good';
+      default:
+        return '#555555';
+    }
+  }
+
+  titleLink(): String {
+    return `https://github.com/${this.github.repository}/commit/${this.github.sha}/checks`;
+  }
+
+  title(): String {
+    return this.github.workflow;
+  }
+
+  fields() {
+    return [
       {
-        pretext: buildPretext(github, job),
-        color: buildColor(job.status),
-        author_name: buildAuthorName(github, job),
-        title: buildTitle(github, job),
-        title_link: buildTitleLink(github, job),
-        text: buildText(github, job),
-        fields: buildFields(github, job),
-        image_url: '',
-        footer: 'Github Actions',
-        footer_icon: '',
-        ts: Date.now()
+        title: 'Repository',
+        value: this.github.repository,
+        short: true
+      },
+      {
+        title: 'Branch',
+        value: this.github.ref,
+        short: true
       }
     ]
   }
-}
 
-function buildAuthorName(github: any, job: any): String {
-  return github.workflow;
-}
+  footer(): String {
+    return core.getInput('footer');
+  }
 
-function buildPretext(github: any, job: any): String {
-  return "";
-}
-
-function buildText(github: any, job: any): String {
-  return "";
-}
-
-function buildColor(job_status: String): String {
-  switch(job_status) {
-    case 'Failure':
-      return 'danger';
-    case 'Success':
-      return 'good';
-    default:
-      return '#555555';
+  footerIcon(): String {
+    return core.getInput('footer_icon');
   }
 }
 
-function buildTitleLink(github: any, job: any): String {
-  console.log(github.event.check_suite.pull_requests)
-  if (github.event.check_suite.pull_requests.length > 0) {
-    const pr = github.event.check_suite.pull_requests[0];
-    return `https://github.com/Pay-Baymax/payment-test/pull/${pr.number}/checks?sha=${pr.head.sha}`;
-  }
-  else {
-    return `https://github.com/Pay-Baymax/payment-test/commit/${github.sha}/checks`
+class PushMessageBuilder extends MessageBuilder {
+  constructor(github, job, steps) {
+    super(github, job, steps);
   }
 }
 
-function buildTitle(github: any, job: any): String {
-  return `${github.workflow} ${job.status}`;
+class PullRequestMessageBuilder extends MessageBuilder {
+  constructor(github, job, steps) {
+    super(github, job, steps);
+  }
+
+  authorName(): String {
+    return this.github.repository;
+  }
+
+  title(): String {
+    return this.github.event.pull_request.title;
+  }
+
+  titleLink(): String {
+    return `${this.github.event.pull_request.html_url}/checks`;
+  }
+
+  text(): String {
+    return this.github.event.pull_request.body;
+  }
+  
+  fields(): any {
+    return []
+  }
 }
 
-function buildFields(github: any, job: any) {
-  return [
-    {
-      title: 'Repository',
-      value: github.repository,
-      short: true
-    },
-    {
-      title: 'Branch',
-      value: github.ref,
-      short: true
-    },
-    {
-      title: 'Message',
-      value: github.event.check_suite.head_commit.message
-    }
-  ]
-}
 run();

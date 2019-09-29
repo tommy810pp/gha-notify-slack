@@ -11,9 +11,21 @@ inputs:
   steps:
     description: 'steps info'
     required: true
-  # webhook_url:
-  #   description: 'slack webhook url'
-  #   required: true
+  webhook_url:
+    description: 'slack webhook url'
+    required: true
+  message:
+    description: 'notification message'
+    required: false
+  footer:
+    description: 'notification footer',
+    required: true
+  footer_icon:
+    description: 'notification footer icon',
+    required: false
+  field_generator:
+    description: 'fields generator'
+    required: false
 runs:
   using: 'node12'
   main: 'lib/main.js'
