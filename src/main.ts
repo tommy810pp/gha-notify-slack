@@ -5,9 +5,9 @@ async function run() {
     const github = JSON.parse(core.getInput('github'));
     const job = JSON.parse(core.getInput('job'));
     const steps = JSON.parse(core.getInput('steps'));
-    console.log(github);
-    console.log(job);
-    console.log(steps);
+    console.log(core.getInput('github'));
+    console.log(core.getInput('job'));
+    console.log(core.getInput('steps'));
     // const webhook_url = core.getInput('webhook_url');
     // const webhook = new IncomingWebhook(webhook_url);
     // await webhook.send(buildMessage(github, job))
