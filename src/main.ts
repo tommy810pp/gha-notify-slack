@@ -168,7 +168,7 @@ class PullRequestRequestedMessageBuilder extends MessageBuilder {
 
   async build() {
     const owner = this.github.event.repository.owner.login;
-    const pull_number = this.github.event.pull_requests[0].number;
+    const pull_number = this.github.event.check_suite.pull_requests[0].number;
     const repo = this.github.event.repository.name;
     this.pull_request = await this.gh_client.pulls.get({
       owner,
