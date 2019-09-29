@@ -2,9 +2,18 @@ name: 'Your name here'
 description: 'Provide a description here'
 author: 'Your name or organization here'
 inputs:
-  myInput:              # change this
-    description: 'input description here'
-    default: 'default value if applicable'
+  github:
+    description: 'github event info'
+    required: true
+  job:
+    description: 'job info'
+    required: true
+  steps:
+    description: 'steps info'
+    required: true
+  # webhook_url:
+  #   description: 'slack webhook url'
+  #   required: true
 runs:
   using: 'node12'
   main: 'lib/main.js'
