@@ -1,8 +1,7 @@
 import * as core from '@actions/core';
 import {GitHub} from '@actions/github';
 import {IncomingWebhook, IncomingWebhookSendArguments} from '@slack/webhook';
-import { MessageAttachment } from '@slack/types';
-
+import {readFileSync} from 'fs';
 async function run() {
   try {
     const github = JSON.parse(core.getInput('github'));
@@ -12,7 +11,8 @@ async function run() {
     console.log(core.getInput('job'));
     console.log(core.getInput('steps'));
     
-    const builder = factory(github, job, steps)
+    let builder = messageBuilderFactory(github, job, steps);
+    builder.fieldsBuilder = fieldsBuilderFactory(core.getInput('fields_builder'));
     if (builder !== undefined) {
       const message = await builder.build();
       console.log(message);
@@ -20,14 +20,12 @@ async function run() {
       await webhook.send(message);
     }
     
-    // console.log(buildMessage(github, job, steps))
-    
   } catch (error) {
     core.setFailed(error.message);
   }
 }
 
-function factory(github, job, steps) {
+function messageBuilderFactory(github, job, steps) {
   switch(github.event_name) {
     case 'pull_request':
       switch(github.event.action) {
@@ -40,6 +38,17 @@ function factory(github, job, steps) {
       }
     case 'push':
       return new PushMessageBuilder(github, job, steps);
+    default:
+      throw new Error("not supported event type");
+  }
+}
+
+function fieldsBuilderFactory(type) {
+  switch(type) {
+    case 'karate':
+      return new KarateResultFiledsBuilder();
+    default:
+      return new DefaultFieldsBuilder();
   }
 }
 
@@ -47,6 +56,7 @@ class MessageBuilder {
   github: any;
   job: any;
   steps: any;
+  fieldsBuilder?: FieldsBuilder;
   constructor(github, job, steps) {
     this.github = github;
     this.job = job;
@@ -102,18 +112,8 @@ class MessageBuilder {
   }
 
   async fields() {
-    return [
-      {
-        title: 'Repository',
-        value: this.github.repository,
-        short: true
-      },
-      {
-        title: 'Branch',
-        value: this.github.ref,
-        short: true
-      }
-    ]
+    if (this.fieldsBuilder === undefined) return [];
+    return this.fieldsBuilder.build(this.github, this.job, this.steps);
   }
 
   async footer(): Promise<string> {
@@ -151,12 +151,7 @@ class PullRequestMessageBuilder extends MessageBuilder {
   async text(): Promise<string> {
     return this.github.event.pull_request.body;
   }
-  
-  async fields() {
-    return []
-  }
 }
-
 
 class PullRequestRequestedMessageBuilder extends MessageBuilder {
   gh_client: GitHub;
@@ -195,9 +190,76 @@ class PullRequestRequestedMessageBuilder extends MessageBuilder {
   async text(): Promise<string> {
     return this.pull_request.body;
   }
-  
-  async fields() {
-    return []
+}
+
+interface FieldsBuilder {
+  build(github, job, steps): [];
+}
+
+class DefaultFieldsBuilder implements FieldsBuilder {
+  constructor() {
+  }
+
+  build(github, job, steps): any {
+    return [
+      {
+        title: 'Repository',
+        value: github.repository,
+        short: true
+      },
+      {
+        title: 'Branch',
+        value: github.ref,
+        short: true
+      }
+    ]
+  }
+}
+
+class KarateResultFiledsBuilder implements FieldsBuilder {
+  results: any;
+  constructor() {
+    this.results = JSON.parse(readFileSync(core.getInput('karate_results_file'), {encoding: "utf-8"}));
+  }
+
+  build(github, job, steps): any {
+    return [
+      {
+        "title": "features",
+        "text": this.results.features,
+        "short": true
+      },
+      {
+        "title": "scenarios",
+        "text": this.results.scenarios,
+        "short": true
+      },
+      {
+        "title": "passed",
+        "text": this.results.passed,
+        "short": true
+      },
+      {
+        "title": "failed",
+        "text": this.results.failed,
+        "short": true
+      },
+      {
+        "title": "elapsedTime",
+        "text": this.results.elapsedTime,
+        "short": true
+      },
+      {
+        "title": "totalTime",
+        "text": this.results.totalTime,
+        "short": true
+      },
+      {
+        "title": "failures",
+        "text": this.results.failures.map((k, v) => `[${k}] ${v}`).join('\n'),
+        "short": false
+      }
+    ]
   }
 }
 
