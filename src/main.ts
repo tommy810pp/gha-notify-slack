@@ -12,7 +12,7 @@ async function run() {
     
     const builder = factory(github, job, steps)
     if (builder !== undefined) {
-      const message = builder.build();
+      const message = await builder.build();
       console.log(message);
     }
     
