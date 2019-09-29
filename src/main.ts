@@ -1,5 +1,7 @@
 import * as core from '@actions/core';
 import {GitHub} from '@actions/github';
+import {IncomingWebhook, IncomingWebhookSendArguments} from '@slack/webhook';
+import { MessageAttachment } from '@slack/types';
 
 async function run() {
   try {
@@ -14,12 +16,12 @@ async function run() {
     if (builder !== undefined) {
       const message = await builder.build();
       console.log(message);
+      const webhook = new IncomingWebhook(core.getInput('webhook_url'));
+      await webhook.send(message);
     }
     
     // console.log(buildMessage(github, job, steps))
-    // const webhook_url = core.getInput('webhook_url');
-    // const webhook = new IncomingWebhook(webhook_url);
-    // await webhook.send(buildMessage(github, job))
+    
   } catch (error) {
     core.setFailed(error.message);
   }
@@ -51,38 +53,36 @@ class MessageBuilder {
     this.steps = steps;
   }
   
-  async build() {
+  async build(): Promise<IncomingWebhookSendArguments>{
     return {
-      attachments: [
-        {
-          pretext: await this.pretext(),
-          color: await this.color(),
-          author_name: await this.authorName(),
-          title: await this.title(),
-          title_link: await this.titleLink(),
-          text: await this.text(),
-          fields: await this.fields(),
-          footer: await this.footer(),
-          footer_icon: await this.footerIcon(),
-          ts: Date.now()
-        }
-      ]
+      attachments: [{
+        pretext: await this.pretext(),
+        color: await this.color(),
+        author_name: await this.authorName(),
+        title: await this.title(),
+        title_link: await this.titleLink(),
+        text: await this.text(),
+        fields: await this.fields(),
+        footer: await this.footer(),
+        footer_icon: await this.footerIcon(),
+        ts: Date.now().toLocaleString()
+      }]
     }
   }
 
-  async authorName(): Promise<String> {
+  async authorName(): Promise<string> {
     return "";
   }
 
-  async pretext(): Promise<String> {
+  async pretext(): Promise<string> {
     return core.getInput("message");
   }
 
-  async text(): Promise<String> {
+  async text(): Promise<string> {
     return "";
   }
 
-  async color(): Promise<String> {
+  async color(): Promise<string> {
     switch(this.job.status) {
       case 'Failure':
         return 'danger';
@@ -93,11 +93,11 @@ class MessageBuilder {
     }
   }
 
-  async titleLink(): Promise<String> {
+  async titleLink(): Promise<string> {
     return `https://github.com/${this.github.repository}/commit/${this.github.sha}/checks`;
   }
 
-  async title(): Promise<String> {
+  async title(): Promise<string> {
     return this.github.workflow;
   }
 
@@ -116,11 +116,11 @@ class MessageBuilder {
     ]
   }
 
-  async footer(): Promise<String> {
+  async footer(): Promise<string> {
     return core.getInput('footer');
   }
 
-  async footerIcon(): Promise<String> {
+  async footerIcon(): Promise<string> {
     return core.getInput('footer_icon');
   }
 }
@@ -136,19 +136,19 @@ class PullRequestMessageBuilder extends MessageBuilder {
     super(github, job, steps);
   }
 
-  async authorName(): Promise<String> {
+  async authorName(): Promise<string> {
     return this.github.repository;
   }
 
-  async title(): Promise<String> {
+  async title(): Promise<string> {
     return this.github.event.pull_request.title;
   }
 
-  async titleLink(): Promise<String> {
+  async titleLink(): Promise<string> {
     return `${this.github.event.pull_request.html_url}/checks`;
   }
 
-  async text(): Promise<String> {
+  async text(): Promise<string> {
     return this.github.event.pull_request.body;
   }
   
@@ -178,19 +178,19 @@ class PullRequestRequestedMessageBuilder extends MessageBuilder {
     return super.build()
   }
 
-  async authorName(): Promise<String> {
+  async authorName(): Promise<string> {
     return this.github.repository;
   }
 
-  async title(): Promise<String> {
+  async title(): Promise<string> {
     return this.pull_request.title;
   }
 
-  async titleLink(): Promise<String> {
+  async titleLink(): Promise<string> {
     return `${this.pull_request.html_url}/checks`;
   }
 
-  async text(): Promise<String> {
+  async text(): Promise<string> {
     return this.pull_request.body;
   }
   
