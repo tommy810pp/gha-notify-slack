@@ -11,6 +11,9 @@ inputs:
   steps:
     description: 'steps info'
     required: true
+  github_token:
+    description: 'github token'
+    required: true
   webhook_url:
     description: 'slack webhook url'
     required: true
