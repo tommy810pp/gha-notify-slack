@@ -223,6 +223,10 @@ class KarateResultFiledsBuilder implements FieldsBuilder {
   }
 
   build(github, job, steps): any {
+    let failures: string[] = [];
+    this.results.failures.forEach((k: string, v: string) => {
+      failures.push(`[${k}] ${v}`);
+    });
     return [
       {
         "title": "features",
@@ -256,7 +260,7 @@ class KarateResultFiledsBuilder implements FieldsBuilder {
       },
       {
         "title": "failures",
-        "text": this.results.failures.map((k, v) => `[${k}] ${v}`).join('\n'),
+        "text": failures.join('\n'),
         "short": false
       }
     ]
