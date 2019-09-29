@@ -221,12 +221,11 @@ class KarateResultFiledsBuilder implements FieldsBuilder {
   }
 
   build(github, job, steps): any {
+    const results = JSON.parse(readFileSync(core.getInput('karate_results_file'), {encoding: "utf-8"}));
     let failures: string[] = [];
-    const results = JSON.parse(readFileSync("./" + core.getInput('karate_results_file'), {encoding: "utf-8"}));
-    console.log(results);
-    results.failures.forEach((k: string, v: string) => {
-      failures.push(`[${k}] ${v}`);
-    });
+    for(const key in results.failures) {
+      failures.push(`[${key}] ${results.failures[key]}`);
+    }
     return [
       {
         "title": "features",
