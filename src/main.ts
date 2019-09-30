@@ -75,7 +75,7 @@ class MessageBuilder {
         fields: await this.fields(),
         footer: await this.footer(),
         footer_icon: await this.footerIcon(),
-        ts: Date.now().toString()
+        ts: (Date.now()/1000).toString()
       }]
     }
   }
