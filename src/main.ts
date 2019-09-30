@@ -1,7 +1,8 @@
 import * as core from '@actions/core';
 import {GitHub} from '@actions/github';
 import {IncomingWebhook, IncomingWebhookSendArguments} from '@slack/webhook';
-import {readFileSync} from 'fs';
+import * as fs from 'fs';
+
 async function run() {
   try {
     const github = JSON.parse(core.getInput('github'));
@@ -57,6 +58,7 @@ class MessageBuilder {
   job: any;
   steps: any;
   fieldsBuilder?: FieldsBuilder;
+
   constructor(github, job, steps) {
     this.github = github;
     this.job = job;
@@ -221,14 +223,23 @@ class KarateResultFiledsBuilder implements FieldsBuilder {
   }
 
   build(github, job, steps): any {
-    const results = JSON.parse(readFileSync(core.getInput('karate_results_file'), {encoding: "utf-8"}));
+    const karateResultsFile = core.getInput('karate_results_file');
+    if (!karateResultsFile) return [];
+    if (!fs.existsSync(karateResultsFile)) return [];
+    const results = JSON.parse(fs.readFileSync(karateResultsFile, {encoding: "utf-8"}));
+    if (!results) return [];
+  
     let failures: string[] = [];
-    for(const key in results.failures) {
-      failures.push(key);
-      results.failures[key].split('\n').forEach(line => {
-        failures.push(`    ${line}`);
-      });
+    
+    if (!results.failures) {
+      for(const key in results.failures) {
+        failures.push(key);
+        results.failures[key].split('\n').forEach(line => {
+          failures.push(`    ${line}`);
+        });
+      }
     }
+
     return [
       {
         "title": "features",
