@@ -8,19 +8,14 @@ async function run() {
     const github = JSON.parse(core.getInput('github'));
     const job = JSON.parse(core.getInput('job'));
     const steps = JSON.parse(core.getInput('steps'));
-    console.log(core.getInput('github'));
-    console.log(core.getInput('job'));
-    console.log(core.getInput('steps'));
     
     let builder = messageBuilderFactory(github, job, steps);
     builder.fieldsBuilder = fieldsBuilderFactory(core.getInput('fields_builder'));
     if (builder !== undefined) {
       const message = await builder.build();
-      console.log(JSON.stringify(message));
       const webhook = new IncomingWebhook(core.getInput('webhook_url'));
       await webhook.send(message);
     }
-    
   } catch (error) {
     core.setFailed(error.message);
   }
@@ -39,6 +34,8 @@ function messageBuilderFactory(github, job, steps) {
       }
     case 'push':
       return new PushMessageBuilder(github, job, steps);
+    case 'schedule':
+        return new ScheduleMessageBuilder(github, job, steps);
     default:
       throw new Error("not supported event type");
   }
@@ -63,10 +60,15 @@ class MessageBuilder {
     this.github = github;
     this.job = job;
     this.steps = steps;
+
+    console.log('github', JSON.stringify(core.getInput('github')));
+    console.log('job', JSON.stringify(core.getInput('job')));
+    console.log('steps', JSON.stringify(core.getInput('steps')));
   }
   
   async build(): Promise<IncomingWebhookSendArguments>{
-    return {
+
+    const message = {
       attachments: [{
         pretext: await this.pretext(),
         color: await this.color(),
@@ -79,7 +81,11 @@ class MessageBuilder {
         footer_icon: await this.footerIcon(),
         ts: (Date.now()/1000).toString()
       }]
-    }
+    };
+
+    console.log('built message', JSON.stringify(message));
+
+    return message;
   }
 
   async authorName(): Promise<string> {
@@ -173,7 +179,7 @@ class PullRequestRequestedMessageBuilder extends MessageBuilder {
       repo 
     });
     this.pull_request = response.data;
-    console.log(this.pull_request);
+    console.log('pull_request', this.pull_request);
     return super.build()
   }
 
@@ -191,6 +197,15 @@ class PullRequestRequestedMessageBuilder extends MessageBuilder {
 
   async text(): Promise<string> {
     return this.pull_request.body;
+  }
+}
+
+class ScheduleMessageBuilder extends MessageBuilder {
+  constructor(github, job, steps) {
+    super(github, job, steps);
+  }
+  async authorName(): Promise<string> {
+    return "Periodically Integration Test";
   }
 }
 
