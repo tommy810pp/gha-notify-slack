@@ -246,7 +246,7 @@ class KarateResultFiledsBuilder implements FieldsBuilder {
   
     let failures: string[] = [];
     
-    if (!results.failures) {
+    if (results.failures) {
       for(const key in results.failures) {
         failures.push(key);
         results.failures[key].split('\n').forEach(line => {
