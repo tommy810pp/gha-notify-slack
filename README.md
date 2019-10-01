@@ -111,3 +111,10 @@ uses: actions/typescript-action@v1
 with:
   milliseconds: 1000
 ```
+
+## References
+
+https://github.com/actions/toolkit/blob/master/docs/action-versioning.md
+https://git-scm.com/book/en/v2/Git-Basics-Tagging
+https://help.github.com/ja/articles/contexts-and-expression-syntax-for-github-actions
+https://api.slack.com/incoming-webhooks

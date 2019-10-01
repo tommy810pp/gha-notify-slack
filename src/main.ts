@@ -35,7 +35,9 @@ function messageBuilderFactory(github, job, steps) {
     case 'push':
       return new PushMessageBuilder(github, job, steps);
     case 'schedule':
-        return new ScheduleMessageBuilder(github, job, steps);
+      return new ScheduleMessageBuilder(github, job, steps);
+    case 'repository_dispatch':
+      return new RepositoryDispatchMessageBuilder(github, job, steps);
     default:
       throw new Error("not supported event type");
   }
@@ -209,6 +211,15 @@ class ScheduleMessageBuilder extends MessageBuilder {
   }
 }
 
+class RepositoryDispatchMessageBuilder extends MessageBuilder {
+  constructor(github, job, steps) {
+    super(github, job, steps);
+  }
+  async authorName(): Promise<string> {
+    return `Triggered by ${this.github.actor}`;
+  }
+}
+
 interface FieldsBuilder {
   build(github, job, steps): [];
 }
@@ -243,19 +254,7 @@ class KarateResultFiledsBuilder implements FieldsBuilder {
     if (!fs.existsSync(karateResultsFile)) return [];
     const results = JSON.parse(fs.readFileSync(karateResultsFile, {encoding: "utf-8"}));
     if (!results) return [];
-  
-    let failures: string[] = [];
-    
-    if (results.failures) {
-      for(const key in results.failures) {
-        failures.push(key);
-        results.failures[key].split('\n').forEach(line => {
-          failures.push(`    ${line}`);
-        });
-      }
-    }
-
-    return [
+    const fields = [
       {
         "title": "features",
         "value": results.features,
@@ -285,13 +284,25 @@ class KarateResultFiledsBuilder implements FieldsBuilder {
         "title": "totalTime",
         "value": results.totalTime,
         "short": true
-      },
-      {
-        "title": "failures",
-        "value": failures.join('\n'),
-        "short": false
       }
-    ]
+    ];
+
+    if (results.failures) {
+      let failures: string[] = [];
+      for(const key in results.failures) {
+        failures.push(key);
+        results.failures[key].split('\n').forEach(line => {
+          failures.push(`    ${line}`);
+        });
+      }
+      fields.push(
+        {
+          "title": "failures",
+          "value": failures.join('\n'),
+          "short": false
+        })
+    }
+    return fields;
   }
 }
 
