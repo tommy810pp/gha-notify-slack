@@ -244,7 +244,7 @@ function messageBuilderFactory(options) {
         },
         {
           "title": "totalTime",
-          "value": humanDuration.humanize(results.totalTime),
+          "value": humanDuration.humanize(Math.round(results.totalTime)),
           "short": true
         }
       ];
