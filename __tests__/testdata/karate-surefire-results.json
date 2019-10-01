@@ -1,0 +1,15 @@
+{
+    "features": 11,
+    "ignored": 0,
+    "efficiency": 0.9449135573231462,
+    "failures": {
+        "scenario.payer-app.topup-by-ymoney_bank-v1": "topup-by-ymoney_bank-v1.feature:35 - path: $, actual: 400, expected: 201, reason: not equal (Integer)\ntopup-by-ymoney_bank-v1.feature:107 - path: $.resultInfo.code, actual: 'payMethod.payerAccountNo: must not be null', expected: '\"TOPUP_AMOUNT_LESS_THAN_LOWER_LIMIT\"', reason: actual value is not JSON-like"
+    },
+    "totalTime": 197140.15020499995,
+    "threads": 1,
+    "scenarios": 26,
+    "failed": 2,
+    "passed": 24,
+    "version": "0.9.4",
+    "elapsedTime": 208633.0
+}
