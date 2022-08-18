@@ -20,7 +20,7 @@
   "author": "YourNameOrOrganization",
   "license": "MIT",
   "dependencies": {
-    "@actions/core": "^1.0.0",
+    "@actions/core": "^1.9.1",
     "@actions/github": "^1.1.0",
     "@slack/webhook": "^5.0.2",
     "humanize-duration-ts": "^2.0.0"
